@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
+#include <pthread.h>
 #include "image.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -56,16 +57,54 @@ uint8_t getPixelValue(Image* srcImage,int x,int y,int bit,Matrix algorithm){
 //            destImage: A pointer to a  pre-allocated (including space for the pixel array) structure to receive the convoluted image.  It should be the same size as srcImage
 //            algorithm: The kernel matrix to use for the convolution
 //Returns: Nothing
-void convolute(Image* srcImage,Image* destImage,Matrix algorithm){
-    int row,pix,bit,span;
-    span=srcImage->bpp*srcImage->bpp;
-    for (row=0;row<srcImage->height;row++){
-        for (pix=0;pix<srcImage->width;pix++){
-            for (bit=0;bit<srcImage->bpp;bit++){
-                destImage->data[Index(pix,row,srcImage->width,bit,srcImage->bpp)]=getPixelValue(srcImage,pix,row,bit,algorithm);
+// void convolute(Image* srcImage,Image* destImage,Matrix algorithm){
+//     int row,pix,bit,span;
+//     span=srcImage->bpp*srcImage->bpp;
+//     for (row=0;row<srcImage->height;row++){
+//         for (pix=0;pix<srcImage->width;pix++){
+//             for (bit=0;bit<srcImage->bpp;bit++){
+//                 destImage->data[Index(pix,row,srcImage->width,bit,srcImage->bpp)]=getPixelValue(srcImage,pix,row,bit,algorithm);
+//             }
+//         }
+//     }
+// }
+
+void* convolute_thread(void* task) {
+    int row, pix, bit, elements;
+    int rank = (int)((Task*)task)->thread;
+    Job* job = ((Task*)task)->job;
+
+    for(row = rank; row < job->srcImage->height; row += thread_count) {
+        for(pix = 0; pix < job->srcImage->width; pix++) {
+            for(bit = 0; bit < job->srcImage->bpp; bit++) {
+                job->destImage->data[Index(pix,row,job->srcImage->width,bit,job->srcImage->bpp)]=getPixelValue(job->srcImage,pix,row,bit,algorithms[job->algorithm]);
             }
         }
     }
+
+    return NULL;
+}
+
+void convolute(Job* job) {
+    uint32_t thread;
+    pthread_t* thread_handles;
+    Task* tasks;
+
+    thread_handles = (pthread_t*)malloc(thread_count * sizeof(pthread_t));
+    tasks = (Task*)malloc(thread_count * sizeof(Task));
+
+    for(thread = 0; thread < thread_count; thread++) {
+        tasks[thread].job = job;
+        tasks[thread].thread = thread;
+        pthread_create(&thread_handles[thread], NULL, &convolute_thread, (void*)(&tasks[thread]));
+    }
+
+    for(thread = 0; thread < thread_count; thread++) {
+        pthread_join(thread_handles[thread], NULL);
+    }
+
+    free(thread_handles);
+    free(tasks);
 }
 
 //Usage: Prints usage information for the program
@@ -111,7 +150,13 @@ int main(int argc,char** argv){
     destImage.height=srcImage.height;
     destImage.width=srcImage.width;
     destImage.data=malloc(sizeof(uint8_t)*destImage.width*destImage.bpp*destImage.height);
-    convolute(&srcImage,&destImage,algorithms[type]);
+    
+    Job job;
+    job.srcImage = &srcImage;
+    job.destImage = &destImage;
+    job.algorithm = type;
+
+    convolute(&job);
     stbi_write_png("output.png",destImage.width,destImage.height,destImage.bpp,destImage.data,destImage.bpp*destImage.width);
     stbi_image_free(srcImage.data);
     
