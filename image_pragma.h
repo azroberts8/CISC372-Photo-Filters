@@ -4,9 +4,6 @@
 
 #define Index(x,y,width,bit,bpp) y*width*bpp+bpp*x+bit
 
-typedef double Matrix[3][3];
-enum KernelTypes{EDGE=0,SHARPEN=1,BLUR=2,GAUSE_BLUR=3,EMBOSS=4,IDENTITY=5};
-
 typedef struct{
     uint8_t* data;
     int width;
@@ -14,19 +11,12 @@ typedef struct{
     int bpp;
 } Image;
 
-typedef struct {
-    Image* srcImage;
-    Image* destImage;
-    enum KernelTypes algorithm;
-} Job;
+enum KernelTypes{EDGE=0,SHARPEN=1,BLUR=2,GAUSE_BLUR=3,EMBOSS=4,IDENTITY=5};
 
-typedef struct {
-    Job* job;
-    uint32_t thread;
-} Task;
+typedef double Matrix[3][3];
 
 uint8_t getPixelValue(Image* srcImage,int x,int y,int bit,Matrix algorithm);
-void convolute(Job* job);
+void convolute(Image* srcImage,Image* destImage,Matrix algorithm);
 int Usage();
 enum KernelTypes GetKernelType(char* type);
 
