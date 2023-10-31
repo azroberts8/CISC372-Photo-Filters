@@ -26,6 +26,7 @@ typedef struct {
 } Task;
 
 uint8_t getPixelValue(Image* srcImage,int x,int y,int bit,Matrix algorithm);
+
 void convolute(Job* job);
 int Usage();
 enum KernelTypes GetKernelType(char* type);
