@@ -1,0 +1,18 @@
+Script started on Mon 30 Oct 2023 08:00:03 PM EDT
+]0;andrewzr@login01.darwin:~/CISC372-Photo-Filters[?1034h[(ea-cisc372-silber:andrewzr)@login01.darwin CISC372-Photo-Filters]$ s[Ksalloc --ntasks=1 --cpus-per-task=4 --partition=standard
+salloc: Granted job allocation 4764467
+salloc: Waiting for resource configuration
+salloc: Nodes r1n00 are ready for job
+]0;andrewzr@r1n00.darwin:~/CISC372-Photo-Filters[?1034h[andrewzr@r1n00 CISC372-Photo-Filters]$ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+]0;andrewzr@r1n00.darwin:~/CISC372-Photo-Filters[andrewzr@r1n00 CISC372-Photo-Filters]$ srun ./image pic1.jpg edge
+srun ./image-omp pic1.jpg edgeTook 7 seconds
+]0;andrewzr@r1n00.darwin:~/CISC372-Photo-Filters[andrewzr@r1n00 CISC372-Photo-Filters]$ srun ./image-omp pic1.jpg edge
+Took 7 seconds
+]0;andrewzr@r1n00.darwin:~/CISC372-Photo-Filters[andrewzr@r1n00 CISC372-Photo-Filters]$ exit
+logout
+salloc: Relinquishing job allocation 4764467
+salloc: Job allocation 4764467 has been revoked.
+]0;andrewzr@login01.darwin:~/CISC372-Photo-Filters[(ea-cisc372-silber:andrewzr)@login01.darwin CISC372-Photo-Filters]$ exit
+exit
+
+Script done on Mon 30 Oct 2023 08:00:57 PM EDT
